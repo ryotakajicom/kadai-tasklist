@@ -3,11 +3,12 @@ class TasksController < ApplicationController
   before_action :require_user_logged_in
   
   def index
-    @tasks = Task.all.page(params[:page]).per(10)
+    @tasks = current_user.tasks.all.page(params[:page]).per(10)
   end
 
   def show
-    @task = Task.find(params[:id])
+    @task = set_task
+    check_task(@task)
   end
 
   def new
@@ -15,7 +16,8 @@ class TasksController < ApplicationController
   end
 
   def create
-     @task = current_user.tasks.build(task_params)
+    @task = set_task
+    check_task(@task)
 
     if @task.save
       flash[:success] = 'タスクが正常に投稿されました'
@@ -27,11 +29,13 @@ class TasksController < ApplicationController
   end
 
   def edit
-    @task = Task.find(params[:id])
+    @task = set_task
+    check_task(@task)
   end
 
   def update
-    @task = Task.find(params[:id])
+    @task = set_task
+    check_task(@task)
 
     if @task.update(task_params)
       flash[:success] = 'タスクは正常に更新されました'
@@ -43,7 +47,8 @@ class TasksController < ApplicationController
   end
 
   def destroy
-    @task = Task.find(params[:id])
+    @task = set_task
+    check_task(@task)
     @task.destroy
 
     flash[:success] = 'タスクは正常に削除されました'
@@ -58,6 +63,13 @@ class TasksController < ApplicationController
   end
   
   def set_task
-    @task = Task.find(params[:id])
+    current_user.tasks.find_by_id(params[:id])
+  end
+  
+  def check_task(task)
+    unless task
+      flash[:danger] = 'タスクが見つかりませんでした'
+      redirect_to root_path
+    end
   end
 end
